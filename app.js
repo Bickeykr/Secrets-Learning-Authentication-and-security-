@@ -50,7 +50,7 @@ app.post("/login", function (req, res) {
 
   User.findOne({ email: username }, function (err, foundUser) {
     if (err) {  
-      console.log("Here is the " + err);
+      console.log( err);
     } else {
       if (foundUser) {
         if (foundUser.password === password ) {
