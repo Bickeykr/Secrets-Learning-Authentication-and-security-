@@ -7,6 +7,8 @@ const session = require("express-session");
 const passport = require("passport");
 const passportLocalMongoose = require("passport-local-mongoose");
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
+const Strategy = require('passport-twitter').Strategy;
+
 const findOrCreate = require("mongoose-findorcreate");
 
 const app = express();
@@ -53,6 +55,17 @@ passport.deserializeUser(function(user, cb) {
     return cb(null, user);
   });
 });
+passport.use(new Strategy({
+  consumerKey: process.env.TWITTER_CONSUMER_KEY,
+  consumerSecret: process.env.TWITTER_CONSUMER_SECRET,
+  callbackURL: "http://localhost:3000/auth/twitter/secrets"
+  },
+  function(token, tokenSecret, profile, cb) {
+    User.findOrCreate({ googleId: profile.id }, function (err, user) {
+      return cb(err, user);
+    });
+   }));
+   
 
 passport.use(
   new GoogleStrategy(
@@ -63,7 +76,7 @@ passport.use(
      },
     function (accessToken, refreshToken, profile, cb) {
       console.log(profile);
-      User.findOrCreate({ googleId: profile.id }, function (err, user) {
+      User.findOrCreate({ twitterId: profile.id }, function (err, user) {
         return cb(err, user);
       });
     }
@@ -86,6 +99,16 @@ app.get(
     res.redirect("/secrets");
   }
 );
+
+app.get('/auth/twitter',
+  passport.authenticate('twitter'));
+
+app.get('/auth/twitter/secrets', 
+  passport.authenticate('twitter', { failureRedirect: '/login' }),
+  function(req, res) {
+    // Successful authentication, redirect home.
+    res.redirect('/secrets');
+  });
 
 app.get("/login", function (req, res) {
   res.render("login");
