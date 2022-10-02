@@ -34,7 +34,7 @@ mongoose.connect("mongodb://localhost:27017/userDB");
 const userSchema = new mongoose.Schema({
   email: String,
   password: String,
-  googleId: String,
+  userId: String,
   secret: String,
 });
 
@@ -64,7 +64,7 @@ passport.use(
       callbackURL: "http://localhost:3000/auth/twitter/secrets",
     },
     function (token, tokenSecret, profile, cb) {
-      User.findOrCreate({ twitterId: profile.id }, function (err, user) {
+      User.findOrCreate({ userId: profile.id }, function (err, user) {
         return cb(err, user);
       });
     }
@@ -80,7 +80,7 @@ passport.use(
     },
     function (accessToken, refreshToken, profile, cb) {
       console.log(profile);
-      User.findOrCreate({ googleId: profile.id }, function (err, user) {
+      User.findOrCreate({ userId: profile.id }, function (err, user) {
         return cb(err, user);
       });
     }
@@ -142,8 +142,6 @@ app.get("/submit", function (req, res) {
 
 app.post("/submit", function (req, res) {
   const submittedSecrets = req.body.secret;
-  console.log(submittedSecrets);
-  console.log(req.user.id);
   User.findById(req.user.id, function (err, foundUser) {
     if (err) {
       console.log(err);
